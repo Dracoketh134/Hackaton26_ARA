@@ -127,14 +127,14 @@
       "id": "orelles",
       "category": "Cos",
       "image": "./Imatges/Cos/orelles.png",
-      "word": "Orelles",
+      "word": "Orella",
       "translations": {
         "en": "Ears",
         "es": "Orejas",
         "ar": "آذان",
         "ro": "Urechi"
       },
-      "options": ["Orelles", "Cap", "Boca", "Peu"]
+      "options": ["Orella", "Cap", "Boca", "Peu"]
     },
     {
       "id": "brac",

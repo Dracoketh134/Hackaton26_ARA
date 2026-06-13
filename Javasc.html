@@ -145,6 +145,22 @@
       border: 1px solid rgba(255, 188, 93, 0.18);
     }
 
+    #languageSelector {
+      padding: 0.6rem 1rem;
+      border-radius: 12px;
+      background: rgba(255, 188, 93, 0.14);
+      color: #fff;
+      font-weight: 600;
+      border: 1px solid rgba(255, 188, 93, 0.3);
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s ease;
+    }
+
+    #languageSelector:hover {
+      background: rgba(255, 188, 93, 0.24);
+    }
+
     .card {
       display: grid;
       gap: 22px;
@@ -341,13 +357,19 @@
     <section class="quiz-shell">
       <div class="quiz-head">
         <h2>Joc de vocabular</h2>
-        <div class="badge">Actualitza automàticament</div>
+        <select id="languageSelector">
+          <option value="ca">Català</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="ar">العربية</option>
+          <option value="ro">Română</option>
+        </select>
       </div>
 
       <div class="card">
         <div class="card-info">
           <div class="question-copy">
-            <small>Selecciona la paraula correcta</small>
+            <small id="selectWordLabel">Selecciona la paraula correcta</small>
             <h3 id="questionText">Carrega les dades per començar...</h3>
           </div>
           <p id="hintText">Segueix la imatge i el text d’introducció per encertar.</p>
@@ -367,8 +389,7 @@
     </section>
 
     <footer class="footer">
-      <p><strong>Com funciona:</strong> Cada 30 segons el joc carrega noves dades des de <code>vocab.json</code>. Això permet actualitzar les paraules i opcions sense canviar el codi del joc.</p>
-      <p>Quan esculls una resposta, el botó es torna verd si és correcta o vermell si és errònia. Després d’un encert, el següent pictograma apareix automàticament.</p>
+      <p id="footerText"><strong>Com funciona:</strong> Quan esculls una resposta, el botó es torna verd si és correcta o vermell si és errònia. Després d'un encert, el següent pictograma apareix automàticament. La teva puntuació s'envia automàticament cada vegada que respons.</p>
     </footer>
   </div>
 
@@ -382,18 +403,103 @@
     const optionsContainer = document.getElementById('optionsContainer');
     const statusMessage = document.getElementById('statusMessage');
     const scoreValue = document.getElementById('scoreValue');
+    const languageSelector = document.getElementById('languageSelector');
+    const selectWordLabel = document.getElementById('selectWordLabel');
+    const footerText = document.getElementById('footerText');
 
     let items = [];
     let currentItem = null;
     let totalQuestions = 0;
     let correctCount = 0;
+    let currentLanguage = 'ca';
+
+    const translations = {
+      ca: {
+        loading: 'Esperant les dades...',
+        formatIntro: 'Mira la imatge i tria la paraula en català: {category}.',
+        correct: 'Correcte! «{word}» és encertat.',
+        incorrect: 'No és correcte. Torna-ho a provar.',
+        chooseOption: 'Tria una opció per aprendre la paraula.',
+        noData: 'No s\'han trobat elements al fitxer JSON.',
+        imageError: 'No s\'ha pogut carregar la imatge: {path}',
+        dataLoaded: 'Dades carregades correctament.',
+        dataError: 'No es poden carregar les dades: {error}',
+        punctuation: 'Puntuació',
+        selectWordLabel: 'Selecciona la paraula correcta',
+        footerText: '<strong>Com funciona:</strong> Quan esculls una resposta, el botó es torna verd si és correcta o vermell si és errònia. Després d\'un encert, el següent pictograma apareix automàticament. La teva puntuació s\'envia automàticament cada vegada que respons.'
+      },
+      en: {
+        loading: 'Waiting for data...',
+        formatIntro: 'Look at the image and choose the correct word in Catalan: {category}.',
+        correct: 'Correct! «{word}» is right.',
+        incorrect: 'That\'s not right. Try again.',
+        chooseOption: 'Choose an option to learn the word.',
+        noData: 'No items found in the JSON file.',
+        imageError: 'Could not load the image: {path}',
+        dataLoaded: 'Data loaded successfully.',
+        dataError: 'Cannot load data: {error}',
+        punctuation: 'Score',
+        selectWordLabel: 'Select the correct word',
+        footerText: '<strong>How it works:</strong> When you choose an answer, the button turns green if it\'s correct or red if it\'s wrong. After a correct answer, the next pictogram appears automatically. Your score is sent automatically every time you answer.'
+      },
+      es: {
+        loading: 'Esperando datos...',
+        formatIntro: 'Mira la imagen y elige la palabra correcta en catalán: {category}.',
+        correct: '¡Correcto! «{word}» es la respuesta correcta.',
+        incorrect: 'Eso no es correcto. Intenta de nuevo.',
+        chooseOption: 'Elige una opción para aprender la palabra.',
+        noData: 'No se encontraron elementos en el archivo JSON.',
+        imageError: 'No se pudo cargar la imagen: {path}',
+        dataLoaded: 'Datos cargados correctamente.',
+        dataError: 'No se pueden cargar los datos: {error}',
+        punctuation: 'Puntuación',
+        selectWordLabel: 'Selecciona la palabra correcta',
+        footerText: '<strong>Cómo funciona:</strong> Cuando eliges una respuesta, el botón se vuelve verde si es correcta o rojo si es incorrecta. Después de una respuesta correcta, el siguiente pictograma aparece automáticamente. Tu puntuación se envía automáticamente cada vez que respondes.'
+      },
+      ar: {
+        loading: 'انتظار البيانات...',
+        formatIntro: 'انظر إلى الصورة واختر الكلمة الصحيحة بالكاتالانية: {category}.',
+        correct: 'صحيح! «{word}» هي الإجابة الصحيحة.',
+        incorrect: 'هذا ليس صحيحاً. حاول مرة أخرى.',
+        chooseOption: 'اختر خياراً لتعلم الكلمة.',
+        noData: 'لم يتم العثور على عناصر في ملف JSON.',
+        imageError: 'لم يتمكن من تحميل الصورة: {path}',
+        dataLoaded: 'تم تحميل البيانات بنجاح.',
+        dataError: 'لا يمكن تحميل البيانات: {error}',
+        punctuation: 'النقاط',
+        selectWordLabel: 'اختر الكلمة الصحيحة',
+        footerText: '<strong>كيفية اللعب:</strong> عندما تختار إجابة، يتحول الزر إلى اللون الأخضر إذا كانت صحيحة أو الأحمر إذا كانت خاطئة. بعد إجابة صحيحة، يظهر الرسم التخطيطي التالي تلقائياً. يتم إرسال نقاطك تلقائياً في كل مرة تجيب فيها.'
+      },
+      ro: {
+        loading: 'Se așteaptă datele...',
+        formatIntro: 'Uită-te la imagine și alege cuvântul corect în limba catalană: {category}.',
+        correct: 'Corect! «{word}» este răspunsul corect.',
+        incorrect: 'Asta nu este corect. Încearcă din nou.',
+        chooseOption: 'Alege o opțiune pentru a învăța cuvântul.',
+        noData: 'Nu s-au găsit elemente în fișierul JSON.',
+        imageError: 'Nu s-a putut încărca imaginea: {path}',
+        dataLoaded: 'Datele au fost încărcate cu succes.',
+        dataError: 'Nu se pot încărca datele: {error}',
+        punctuation: 'Puncte',
+        selectWordLabel: 'Alege cuvântul corect',
+        footerText: '<strong>Cum funcționează:</strong> Atunci când alegi o răspuns, butonul devine verde dacă este corect sau roșu dacă este incorect. După un răspuns corect, următoarea pictogramă apare automat. Scorul tău este trimis automat de fiecare dată când răspunzi.'
+      }
+    };
+
+    function t(key, data = {}) {
+      let text = translations[currentLanguage][key] || translations['ca'][key];
+      Object.keys(data).forEach(k => {
+        text = text.replace(`{${k}}`, data[k]);
+      });
+      return text;
+    }
 
     function shuffle(array) {
       return array.slice().sort(() => Math.random() - 0.5);
     }
 
     function formatIntro(item) {
-      return `Mira la imatge i tria la paraula en català: ${item.category}.`;
+      return t('formatIntro', { category: item.category });
     }
 
     function updateScore() {
@@ -424,14 +530,14 @@
       if (isCorrect) {
         correctCount += 1;
         button.dataset.state = 'correct';
-        setStatus(`Correcte! «${currentItem.word}» és encertat.`, 'success');
+        setStatus(t('correct', { word: currentItem.word }), 'success');
         disableAllOptions();
         updateScore();
         saveScore();
         setTimeout(loadQuestion, 1200);
       } else {
         button.dataset.state = 'wrong';
-        setStatus(`No és correcte. Torna-ho a provar.`, 'error');
+        setStatus(t('incorrect'), 'error');
         updateScore();
         saveScore();
       }
@@ -443,7 +549,7 @@
 
     function loadQuestion() {
       if (!items.length) {
-        questionText.textContent = 'No s’han trobat elements al fitxer JSON.';
+        questionText.textContent = t('noData');
         return;
       }
       currentItem = items[Math.floor(Math.random() * items.length)];
@@ -455,13 +561,13 @@
       };
       pictogram.onerror = () => {
         pictogram.style.opacity = '0';
-        setStatus(`No s’ha pogut carregar la imatge: ${imagePath}`, 'error');
+        setStatus(t('imageError', { path: imagePath }), 'error');
       };
       pictogram.src = imagePath;
       questionText.textContent = formatIntro(currentItem);
       hintText.textContent = `English: ${currentItem.translations.en} · Español: ${currentItem.translations.es} · العربية: ${currentItem.translations.ar} · Română: ${currentItem.translations.ro}`;
       populateOptions(currentItem);
-      setStatus('Tria una opció per aprendre la paraula.', 'normal');
+      setStatus(t('chooseOption'), 'normal');
     }
 
     async function loadData() {
@@ -479,9 +585,9 @@
         if (!currentItem) {
           loadQuestion();
         }
-        setStatus('Dades carregades correctament. El joc s’actualitzarà cada 30 segons.', 'success');
+        setStatus(t('dataLoaded'), 'success');
       } catch (err) {
-        setStatus(`No es poden carregar les dades: ${err.message}`, 'error');
+        setStatus(t('dataError', { error: err.message }), 'error');
       }
     }
 
@@ -507,10 +613,25 @@
       }
     }
 
+    function updateUI() {
+      selectWordLabel.textContent = t('selectWordLabel');
+      footerText.innerHTML = t('footerText');
+    }
+
     window.addEventListener('load', () => {
+      currentLanguage = localStorage.getItem('selectedLanguage') || 'ca';
+      languageSelector.value = currentLanguage;
+      updateUI();
       loadData();
       setInterval(loadData, refreshInterval);
       updateScore();
+      setStatus(t('loading'), 'normal');
+    });
+
+    languageSelector.addEventListener('change', (e) => {
+      currentLanguage = e.target.value;
+      localStorage.setItem('selectedLanguage', currentLanguage);
+      location.reload();
     });
   </script>
 </body>

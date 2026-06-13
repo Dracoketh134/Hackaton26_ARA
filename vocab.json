@@ -7,19 +7,6 @@
   },
   "items": [
     {
-      "id": "hola",
-      "category": "Salutacions",
-      "image": "./Imatges/Basiques/hola.png",
-      "word": "Hola",
-      "translations": {
-        "en": "Hello",
-        "es": "Hola",
-        "ar": "مرحبا",
-        "ro": "Salut"
-      },
-      "options": ["Hola", "Adéu", "Gràcies", "Bon dia"]
-    },
-    {
       "id": "cara",
       "category": "Cos",
       "image": "./Imatges/Cos/cara.png",
@@ -69,7 +56,7 @@
         "ar": "رأس",
         "ro": "Cap"
       },
-      "options": ["Cap", "Peu", "Nas", "Ulls"]
+      "options": ["Cap", "Peu", "Nas", "Ull"]
     },
     {
       "id": "boca",
@@ -95,20 +82,20 @@
         "ar": "إصبع",
         "ro": "Deget"
       },
-      "options": ["Dit", "Mà", "Cama", "Ulls"]
+      "options": ["Dit", "Mà", "Cama", "Ull"]
     },
     {
-      "id": "ulls",
+      "id": "ull",
       "category": "Cos",
       "image": "./Imatges/Cos/ulls.png",
-      "word": "Ulls",
+      "word": "Ull",
       "translations": {
         "en": "Eyes",
         "es": "Ojos",
         "ar": "عيون",
         "ro": "Ochi"
       },
-      "options": ["Ulls", "Nas", "Boca", "Cap"]
+      "options": ["Ull", "Nas", "Boca", "Cap"]
     },
     {
       "id": "nas",
@@ -134,7 +121,7 @@
         "ar": "قلب",
         "ro": "Inimă"
       },
-      "options": ["Cor", "Mà", "Ulls", "Dit"]
+      "options": ["Cor", "Mà", "Ull", "Dit"]
     },
     {
       "id": "orelles",
@@ -173,7 +160,7 @@
         "ar": "ساق",
         "ro": "Picior"
       },
-      "options": ["Cama", "Cor", "Dit", "Ulls"]
+      "options": ["Cama", "Cor", "Dit", "Ull"]
     }
   ]
 }

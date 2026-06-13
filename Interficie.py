@@ -1,8 +1,13 @@
 import pygame
 import random
 import math
-import Paraules
-from IntroIdiomes import ARAB, CAST, ANG, RUM, XIN
+from Paraules import IMATGES_MAP
+from IntroIdiomes import ARAB, CAST, ANG, RUM
+import os
+import sys
+
+# Obtenir el directori actual del script
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Inicialització de Pygame
 pygame.init()
@@ -98,116 +103,36 @@ INTRODUCTIONS = {
     "romania": RUM,
 }
 
-VOCABULARY = [
-    {
-        "catala": "Hola",
-        "category": "Salutacions",
-        "icon": "wave",
-        "translations": {
-            "marroc": "مرحبا",
-            "colombia": "Hola",
-            "italia": "Ciao",
-            "xina": "你好",
-            "romania": "Salut",
-        },
-    },
-    {
-        "catala": "Adéu",
-        "category": "Salutacions",
-        "icon": "wing",
-        "translations": {
-            "marroc": "مع السلامة",
-            "colombia": "Adiós",
-            "italia": "Ciao",
-            "xina": "再见",
-            "romania": "La revedere",
-        },
-    },
-    {
-        "catala": "Gràcies",
-        "category": "Cordial",
-        "icon": "heart",
-        "translations": {
-            "marroc": "شكرا",
-            "colombia": "Gracias",
-            "italia": "Grazie",
-            "xina": "谢谢",
-            "romania": "Mulțumesc",
-        },
-    },
-    {
-        "catala": "Roig",
-        "category": "Colors",
-        "icon": "circle",
-        "translations": {
-            "marroc": "أحمر",
-            "colombia": "Rojo",
-            "italia": "Rosso",
-            "xina": "红色",
-            "romania": "Roșu",
-        },
-    },
-    {
-        "catala": "Blau",
-        "category": "Colors",
-        "icon": "drop",
-        "translations": {
-            "marroc": "أزرق",
-            "colombia": "Azul",
-            "italia": "Blu",
-            "xina": "蓝色",
-            "romania": "Albastru",
-        },
-    },
-    {
-        "catala": "Verd",
-        "category": "Colors",
-        "icon": "leaf",
-        "translations": {
-            "marroc": "أخضر",
-            "colombia": "Verde",
-            "italia": "Verde",
-            "xina": "绿色",
-            "romania": "Verde",
-        },
-    },
-    {
-        "catala": "Un",
-        "category": "Nombres",
-        "icon": "one",
-        "translations": {
-            "marroc": "واحد",
-            "colombia": "Uno",
-            "italia": "Uno",
-            "xina": "一",
-            "romania": "Unu",
-        },
-    },
-    {
-        "catala": "Dos",
-        "category": "Nombres",
-        "icon": "two",
-        "translations": {
-            "marroc": "اثنان",
-            "colombia": "Dos",
-            "italia": "Due",
-            "xina": "二",
-            "romania": "Doi",
-        },
-    },
-    {
-        "catala": "Tres",
-        "category": "Nombres",
-        "icon": "three",
-        "translations": {
-            "marroc": "ثلاثة",
-            "colombia": "Tres",
-            "italia": "Tre",
-            "xina": "三",
-            "romania": "Trei",
-        },
-    },
-]
+# Generar vocabulari des de Paraules.py
+def create_vocabulary_from_imatges():
+    """Crea un vocabulari estructurat a partir de IMATGES_MAP."""
+    vocab = []
+    
+    # Definir categories basades en la ruta
+    category_map = {
+        "Basiques": "Salutacions",
+        "Cos": "Cos",
+        "Emocions": "Emocions",
+    }
+    
+    for image_path, paraula in IMATGES_MAP.items():
+        # Determinar la categoria
+        category = "Altres"
+        for folder, cat in category_map.items():
+            if folder in image_path:
+                category = cat
+                break
+        
+        vocab.append({
+            "catala": paraula,
+            "category": category,
+            "image_path": image_path,
+            "icon": "image",
+        })
+    
+    return vocab
+
+VOCABULARY = create_vocabulary_from_imatges()
 
 STATE = {
     "screen": "menu",
@@ -221,6 +146,34 @@ STATE = {
 }
 
 BUTTONS = []
+
+# Caché per imatges carregades
+IMAGE_CACHE = {}
+
+
+def get_image_path(relative_path):
+    """Retorna el path absolut correcte per a una imatge."""
+    return os.path.join(SCRIPT_DIR, relative_path)
+
+
+def load_image(image_path):
+    """Carrega una imatge amb caché."""
+    if image_path in IMAGE_CACHE:
+        return IMAGE_CACHE[image_path]
+    
+    full_path = get_image_path(image_path)
+    
+    if os.path.exists(full_path):
+        try:
+            img = pygame.image.load(full_path)
+            IMAGE_CACHE[image_path] = img
+            return img
+        except Exception as e:
+            print(f"Error carregant imatge {full_path}: {e}")
+            return None
+    else:
+        print(f"Imatge no trovada: {full_path}")
+        return None
 
 
 def lerp_color(a, b, t):
@@ -271,22 +224,26 @@ def draw_pictogram(surface, rect, icon):
 
 
 def make_question(language_key):
+    """Crea una pregunta amb 4 opcions totes en català."""
     question = random.choice(VOCABULARY)
-    choices = {question["translations"][language_key]: question}
+    
+    # Recollir la paraula correcta
+    correct_word = question["catala"]
+    
+    # Recollir 3 paraules incorrectes
     other_items = [item for item in VOCABULARY if item is not question]
     random.shuffle(other_items)
-    while len(choices) < 4:
-        candidate = other_items.pop()
-        translation = candidate["translations"][language_key]
-        if translation not in choices:
-            choices[translation] = candidate
-    items = list(choices.items())
-    random.shuffle(items)
+    
+    incorrect_words = [item["catala"] for item in other_items[:3]]
+    
+    # Crear la llista d'opcions
+    all_options = [correct_word] + incorrect_words
+    random.shuffle(all_options)
+    
     return {
         "question": question,
-        "options": [label for label, _ in items],
-        "correct": question["translations"][language_key],
-        "answers": {label: item for label, item in items},
+        "options": all_options,
+        "correct": correct_word,
     }
 
 
@@ -467,22 +424,42 @@ def draw_task(mouse_pos):
     pygame.draw.rect(WINDOW, (28, 36, 62), card_rect, border_radius=24)
     pygame.draw.rect(WINDOW, COLORS["muted"], card_rect, width=2, border_radius=24)
     draw_text(WINDOW, question["category"], FONT_SMALL, COLORS["accent"], (card_rect.left + 24, card_rect.top + 20))
-    draw_text(
-        WINDOW,
-        question["catala"],
-        FONT_LARGE,
-        COLORS["text"],
-        (card_rect.centerx, card_rect.top + 110),
-        align="center",
-    )
-
-    icon_area = pygame.Rect(
-        card_rect.left + 50,
-        card_rect.top + int(card_rect.height * 0.42),
-        card_rect.width - 100,
-        int(card_rect.height * 0.25),
-    )
-    draw_pictogram(WINDOW, icon_area, question["icon"])
+    
+    # Intent de carregar la imatge si existeix
+    image_loaded = False
+    if "image_path" in question and os.path.exists(question["image_path"]):
+        try:
+            img = pygame.image.load(question["image_path"])
+            img_width = card_rect.width - 50
+            img_height = card_rect.height - 100
+            # Escalar la imatge mantenint la proporció
+            img.set_colorkey((255, 255, 255))
+            scale_factor = min(img_width / img.get_width(), img_height / img.get_height())
+            new_size = (int(img.get_width() * scale_factor), int(img.get_height() * scale_factor))
+            img = pygame.transform.scale(img, new_size)
+            img_rect = img.get_rect(center=(card_rect.centerx, card_rect.top + 150))
+            WINDOW.blit(img, img_rect)
+            image_loaded = True
+        except:
+            image_loaded = False
+    
+    # Si no hi ha imatge, mostrar el pictograma
+    if not image_loaded:
+        draw_text(
+            WINDOW,
+            question["catala"],
+            FONT_LARGE,
+            COLORS["text"],
+            (card_rect.centerx, card_rect.top + 110),
+            align="center",
+        )
+        icon_area = pygame.Rect(
+            card_rect.left + 50,
+            card_rect.top + int(card_rect.height * 0.42),
+            card_rect.width - 100,
+            int(card_rect.height * 0.25),
+        )
+        draw_pictogram(WINDOW, icon_area, question["icon"])
 
     answers = STATE["question_data"]["options"]
     BUTTONS.clear()
@@ -578,10 +555,11 @@ def handle_click(pos):
                     STATE["feedback"] = "right"
                 else:
                     STATE["feedback"] = "wrong"
-                if STATE["round"] >= 5:
+                if STATE["feedback"] == "right" and STATE["round"] >= 5:
                     STATE["screen"] = "result"
-                else:
+                elif STATE["feedback"] == "right":
                     pygame.time.set_timer(pygame.USEREVENT + 1, 800)
+                # Si és incorrecta, es pot intentar de nou sense avançar
             elif STATE["screen"] == "result" and value == "restart":
                 STATE["screen"] = "menu"
                 STATE["language"] = None

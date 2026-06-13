@@ -1,0 +1,9 @@
+{
+  "meta": {
+    "version": "1.0",
+    "title": "Catalan Picture Quiz - Scores",
+    "description": "Game scores saved every 10 seconds",
+    "created": "2026-06-13T00:00:00Z"
+  },
+  "scores": []
+}

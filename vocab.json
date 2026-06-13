@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "version": "1.0",
+    "title": "Catalan Picture Quiz",
+    "description": "Pictogram learning data for Catalan vocabulary",
+    "updated": "2026-06-13T00:00:00Z"
+  },
+  "items": [
+    {
+      "id": "hola",
+      "category": "Salutacions",
+      "image": "./Imatges/Basiques/hola.png",
+      "word": "Hola",
+      "translations": {
+        "en": "Hello",
+        "es": "Hola",
+        "ar": "مرحبا",
+        "ro": "Salut"
+      },
+      "options": ["Hola", "Adéu", "Gràcies", "Bon dia"]
+    },
+    {
+      "id": "cara",
+      "category": "Cos",
+      "image": "./Imatges/Cos/cara.png",
+      "word": "Cara",
+      "translations": {
+        "en": "Face",
+        "es": "Cara",
+        "ar": "وجه",
+        "ro": "Față"
+      },
+      "options": ["Cara", "Peu", "Mà", "Cap"]
+    },
+    {
+      "id": "ma",
+      "category": "Cos",
+      "image": "./Imatges/Cos/ma.png",
+      "word": "Mà",
+      "translations": {
+        "en": "Hand",
+        "es": "Mano",
+        "ar": "يد",
+        "ro": "Mână"
+      },
+      "options": ["Mà", "Dit", "Cor", "Boca"]
+    },
+    {
+      "id": "peu",
+      "category": "Cos",
+      "image": "./Imatges/Cos/peu.png",
+      "word": "Peu",
+      "translations": {
+        "en": "Foot",
+        "es": "Pie",
+        "ar": "قدم",
+        "ro": "Picior"
+      },
+      "options": ["Peu", "Braç", "Cama", "Boca"]
+    },
+    {
+      "id": "cap",
+      "category": "Cos",
+      "image": "./Imatges/Cos/cap.png",
+      "word": "Cap",
+      "translations": {
+        "en": "Head",
+        "es": "Cabeza",
+        "ar": "رأس",
+        "ro": "Cap"
+      },
+      "options": ["Cap", "Peu", "Nas", "Ulls"]
+    },
+    {
+      "id": "boca",
+      "category": "Cos",
+      "image": "./Imatges/Cos/boca.png",
+      "word": "Boca",
+      "translations": {
+        "en": "Mouth",
+        "es": "Boca",
+        "ar": "فم",
+        "ro": "Gură"
+      },
+      "options": ["Boca", "Nas", "Cor", "Cara"]
+    },
+    {
+      "id": "dit",
+      "category": "Cos",
+      "image": "./Imatges/Cos/dit.png",
+      "word": "Dit",
+      "translations": {
+        "en": "Finger",
+        "es": "Dedo",
+        "ar": "إصبع",
+        "ro": "Deget"
+      },
+      "options": ["Dit", "Mà", "Cama", "Ulls"]
+    },
+    {
+      "id": "ulls",
+      "category": "Cos",
+      "image": "./Imatges/Cos/ulls.png",
+      "word": "Ulls",
+      "translations": {
+        "en": "Eyes",
+        "es": "Ojos",
+        "ar": "عيون",
+        "ro": "Ochi"
+      },
+      "options": ["Ulls", "Nas", "Boca", "Cap"]
+    },
+    {
+      "id": "nas",
+      "category": "Cos",
+      "image": "./Imatges/Cos/nas.png",
+      "word": "Nas",
+      "translations": {
+        "en": "Nose",
+        "es": "Nariz",
+        "ar": "أنف",
+        "ro": "Nas"
+      },
+      "options": ["Nas", "Cara", "Peu", "Boca"]
+    },
+    {
+      "id": "cor",
+      "category": "Cos",
+      "image": "./Imatges/Cos/heart.png",
+      "word": "Cor",
+      "translations": {
+        "en": "Heart",
+        "es": "Corazón",
+        "ar": "قلب",
+        "ro": "Inimă"
+      },
+      "options": ["Cor", "Mà", "Ulls", "Dit"]
+    },
+    {
+      "id": "orelles",
+      "category": "Cos",
+      "image": "./Imatges/Cos/orelles.png",
+      "word": "Orelles",
+      "translations": {
+        "en": "Ears",
+        "es": "Orejas",
+        "ar": "آذان",
+        "ro": "Urechi"
+      },
+      "options": ["Orelles", "Cap", "Boca", "Peu"]
+    },
+    {
+      "id": "brac",
+      "category": "Cos",
+      "image": "./Imatges/Cos/braç.png",
+      "word": "Braç",
+      "translations": {
+        "en": "Arm",
+        "es": "Brazo",
+        "ar": "ذراع",
+        "ro": "Braț"
+      },
+      "options": ["Braç", "Cama", "Cap", "Dit"]
+    },
+    {
+      "id": "cama",
+      "category": "Cos",
+      "image": "./Imatges/Cos/leg.png",
+      "word": "Cama",
+      "translations": {
+        "en": "Leg",
+        "es": "Pierna",
+        "ar": "ساق",
+        "ro": "Picior"
+      },
+      "options": ["Cama", "Cor", "Dit", "Ulls"]
+    }
+  ]
+}

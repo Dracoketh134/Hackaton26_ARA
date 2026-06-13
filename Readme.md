@@ -1,4 +1,2 @@
-# Hackathon 2026
-
-Hola
-Bon dia
+bon dia som un equip de la hakaton 2026, son un equip de el centre de codelearn Manresa, jo crec que guanyarem pero aixo s'haura de veure en el futur molta sort a els altres equips i ens veiem al podi.
+Gracies per llegir aixo i no ten

@@ -5,6 +5,10 @@ from Paraules import IMATGES_MAP
 from IntroIdiomes import ARAB, CAST, ANG, RUM
 import os
 import sys
+try:
+    from PIL import Image
+except Exception:
+    Image = None
 
 # Obtenir el directori actual del script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -99,7 +103,6 @@ INTRODUCTIONS = {
     "marroc": ARAB,
     "colombia": CAST,
     "italia": ANG,
-    "xina": XIN,
     "romania": RUM,
 }
 
@@ -160,20 +163,39 @@ def load_image(image_path):
     """Carrega una imatge amb caché."""
     if image_path in IMAGE_CACHE:
         return IMAGE_CACHE[image_path]
-    
     full_path = get_image_path(image_path)
-    
-    if os.path.exists(full_path):
-        try:
-            img = pygame.image.load(full_path)
-            IMAGE_CACHE[image_path] = img
-            return img
-        except Exception as e:
-            print(f"Error carregant imatge {full_path}: {e}")
-            return None
-    else:
+
+    if not os.path.exists(full_path):
         print(f"Imatge no trovada: {full_path}")
         return None
+
+    # Intentem amb pygame primer
+    try:
+        img = pygame.image.load(full_path)
+        try:
+            img = img.convert_alpha() if img.get_alpha() else img.convert()
+        except Exception:
+            pass
+        IMAGE_CACHE[image_path] = img
+        return img
+    except Exception as e:
+        print(f"pygame no pot carregar la imatge {full_path}: {e}")
+
+    # Fallback: intentar carregar amb Pillow i convertir a Surface
+    if Image is not None:
+        try:
+            pil_img = Image.open(full_path).convert("RGBA")
+            size = pil_img.size
+            data = pil_img.tobytes()
+            img = pygame.image.fromstring(data, size, "RGBA")
+            IMAGE_CACHE[image_path] = img
+            return img
+        except Exception as e2:
+            print(f"Fallback PIL ha fallat per {full_path}: {e2}")
+    else:
+        print("PIL no està instal·lat; instal·la 'pillow' per a suport addicional: pip install pillow")
+
+    return None
 
 
 def lerp_color(a, b, t):
@@ -425,26 +447,27 @@ def draw_task(mouse_pos):
     pygame.draw.rect(WINDOW, COLORS["muted"], card_rect, width=2, border_radius=24)
     draw_text(WINDOW, question["category"], FONT_SMALL, COLORS["accent"], (card_rect.left + 24, card_rect.top + 20))
     
-    # Intent de carregar la imatge si existeix
+    # Mostrar imatge real només per la categoria 'Cos'
     image_loaded = False
-    if "image_path" in question and os.path.exists(question["image_path"]):
-        try:
-            img = pygame.image.load(question["image_path"])
-            img_width = card_rect.width - 50
-            img_height = card_rect.height - 100
-            # Escalar la imatge mantenint la proporció
-            img.set_colorkey((255, 255, 255))
-            scale_factor = min(img_width / img.get_width(), img_height / img.get_height())
-            new_size = (int(img.get_width() * scale_factor), int(img.get_height() * scale_factor))
-            img = pygame.transform.scale(img, new_size)
-            img_rect = img.get_rect(center=(card_rect.centerx, card_rect.top + 150))
-            WINDOW.blit(img, img_rect)
-            image_loaded = True
-        except:
-            image_loaded = False
-    
-    # Si no hi ha imatge, mostrar el pictograma
-    if not image_loaded:
+    if question.get("category") == "Cos" and "image_path" in question:
+        img = load_image(question["image_path"])
+        if img:
+            try:
+                img_width = card_rect.width - 50
+                img_height = card_rect.height - 100
+                img = img.convert_alpha()
+                scale_factor = min(img_width / img.get_width(), img_height / img.get_height())
+                new_size = (int(img.get_width() * scale_factor), int(img.get_height() * scale_factor))
+                img = pygame.transform.smoothscale(img, new_size)
+                img_rect = img.get_rect(center=(card_rect.centerx, card_rect.top + 140))
+                WINDOW.blit(img, img_rect)
+                image_loaded = True
+            except Exception as e:
+                print(f"Error redimensionant imatge {question['image_path']}: {e}")
+                image_loaded = False
+
+    # Per a categories diferents de 'Cos' mostrem el text de la paraula
+    if question.get("category") != "Cos":
         draw_text(
             WINDOW,
             question["catala"],
@@ -460,6 +483,16 @@ def draw_task(mouse_pos):
             int(card_rect.height * 0.25),
         )
         draw_pictogram(WINDOW, icon_area, question["icon"])
+    else:
+        # Categoria 'Cos': si no s'ha pogut carregar la imatge, mostrem un pictograma (sense text)
+        if not image_loaded:
+            icon_area = pygame.Rect(
+                card_rect.left + 50,
+                card_rect.top + int(card_rect.height * 0.42),
+                card_rect.width - 100,
+                int(card_rect.height * 0.25),
+            )
+            draw_pictogram(WINDOW, icon_area, question["icon"])
 
     answers = STATE["question_data"]["options"]
     BUTTONS.clear()

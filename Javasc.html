@@ -408,6 +408,23 @@
     const footerText = document.getElementById('footerText');
     const punctuationLabel = document.getElementById('punctuationLabel');
 
+    const audioFolder = './Audios';
+    const wordAudioMap = {
+      Cara: 'cara.mp4',
+      'Mà': 'ma.mp4',
+      Peu: 'peu.mp4',
+      Cap: 'cap.mp4',
+      Boca: 'boca.mp4',
+      Dit: 'dit.mp4',
+      Ull: 'ull.mp4',
+      Nas: 'nas.mp4',
+      Cor: 'cor.mp4',
+      Orella: 'orella.mp4',
+      'Braç': 'braç.mp4',
+      Cama: 'cama.mp4'
+    };
+    let hoverAudio = null;
+
     let items = [];
     let currentItem = null;
     let totalQuestions = 0;
@@ -512,6 +529,21 @@
       statusMessage.style.color = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--muted)';
     }
 
+    function playHoverAudio(word) {
+      const fileName = wordAudioMap[word];
+      if (!fileName) return;
+
+      if (hoverAudio) {
+        hoverAudio.pause();
+        hoverAudio.currentTime = 0;
+      }
+
+      hoverAudio = new Audio(`${audioFolder}/${fileName}`);
+      hoverAudio.play().catch(() => {
+        // Ignorar errors si l'usuari no ha permès la reproducció automàtica
+      });
+    }
+
     function populateOptions(item) {
       optionsContainer.innerHTML = '';
       const shuffled = shuffle(item.options);
@@ -521,6 +553,7 @@
         button.type = 'button';
         button.textContent = option;
         button.addEventListener('click', () => handleChoice(button, option));
+        button.addEventListener('mouseenter', () => playHoverAudio(option));
         optionsContainer.appendChild(button);
       });
     }

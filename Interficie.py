@@ -1,6 +1,8 @@
 import pygame
 import random
 import math
+import Paraules
+from IntroIdiomes import ARAB, CAST, ANG, RUM, XIN
 
 # Inicialització de Pygame
 pygame.init()
@@ -8,9 +10,19 @@ pygame.font.init()
 
 # Configuració de la finestra
 WIDTH, HEIGHT = 1080, 720
-WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
+WINDOW = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("Aprèn Català")
 CLOCK = pygame.time.Clock()
+
+def make_fonts(height):
+    return (
+        pygame.font.SysFont("Gill Sans", max(24, int(height * 0.07)), bold=True),
+        pygame.font.SysFont("Gill Sans", max(18, int(height * 0.045))),
+        pygame.font.SysFont("Gill Sans", max(14, int(height * 0.035))),
+        pygame.font.SysFont("Gill Sans", max(12, int(height * 0.03))),
+    )
+
+FONT_LARGE, FONT_MEDIUM, FONT_SMALL, FONT_TINY = make_fonts(HEIGHT)
 
 # Colors i estètica
 COLORS = {
@@ -75,6 +87,15 @@ MESSAGES = {
         "retry": "Reîncearcă",
         "score": "Puncte",
     },
+}
+
+# Introduccions en varis idiomes
+INTRODUCTIONS = {
+    "marroc": ARAB,
+    "colombia": CAST,
+    "italia": ANG,
+    "xina": XIN,
+    "romania": RUM,
 }
 
 VOCABULARY = [
@@ -196,6 +217,7 @@ STATE = {
     "score": 0,
     "round": 0,
     "feedback": None,
+    "intro_fade": 0,  # Para animación de fade-in
 }
 
 BUTTONS = []
@@ -226,6 +248,14 @@ def draw_text(surface, text, font, color, pos, align="topleft"):
     return rect
 
 
+def resize_window(width, height):
+    global WIDTH, HEIGHT, WINDOW, FONT_LARGE, FONT_MEDIUM, FONT_SMALL, FONT_TINY
+    WIDTH = max(800, min(1080, width))
+    HEIGHT = max(560, min(720, height))
+    WINDOW = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    FONT_LARGE, FONT_MEDIUM, FONT_SMALL, FONT_TINY = make_fonts(HEIGHT)
+
+
 def draw_button(surface, rect, text, hover=False, color=None):
     if color is None:
         color = COLORS["button_hover"] if hover else COLORS["button"]
@@ -236,50 +266,8 @@ def draw_button(surface, rect, text, hover=False, color=None):
 
 
 def draw_pictogram(surface, rect, icon):
-    if icon == "wave":
-        points = [
-            (rect.left + 0.2 * rect.width, rect.centery),
-            (rect.left + 0.45 * rect.width, rect.top + 0.3 * rect.height),
-            (rect.left + 0.7 * rect.width, rect.bottom - 0.25 * rect.height),
-            (rect.right - 0.2 * rect.width, rect.centery),
-        ]
-        pygame.draw.lines(surface, COLORS["accent"], False, points, 10)
-    elif icon == "wing":
-        pygame.draw.arc(surface, COLORS["accent"], rect.inflate(-rect.width * 0.3, -rect.height * 0.2), math.pi / 2, 2.5, 14)
-        pygame.draw.arc(surface, COLORS["accent"], rect.inflate(-rect.width * 0.55, -rect.height * 0.5), math.pi / 2.7, 2.4, 12)
-    elif icon == "heart":
-        left = pygame.Rect(rect.left + rect.width * 0.18, rect.top + rect.height * 0.15, rect.width * 0.28, rect.height * 0.35)
-        right = pygame.Rect(rect.left + rect.width * 0.54, rect.top + rect.height * 0.15, rect.width * 0.28, rect.height * 0.35)
-        pygame.draw.ellipse(surface, COLORS["accent"], left)
-        pygame.draw.ellipse(surface, COLORS["accent"], right)
-        points = [
-            (rect.left + rect.width * 0.2, rect.top + rect.height * 0.4),
-            (rect.centerx, rect.bottom - rect.height * 0.15),
-            (rect.right - rect.width * 0.2, rect.top + rect.height * 0.4),
-        ]
-        pygame.draw.polygon(surface, COLORS["accent"], points)
-    elif icon == "circle":
-        pygame.draw.circle(surface, COLORS["accent"], rect.center, int(rect.width * 0.3))
-    elif icon == "drop":
-        droppoints = [
-            (rect.centerx, rect.top + rect.height * 0.1),
-            (rect.left + rect.width * 0.3, rect.top + rect.height * 0.55),
-            (rect.centerx, rect.bottom - rect.height * 0.12),
-            (rect.right - rect.width * 0.3, rect.top + rect.height * 0.55),
-        ]
-        pygame.draw.polygon(surface, COLORS["accent"], droppoints)
-    elif icon == "leaf":
-        pygame.draw.ellipse(surface, COLORS["accent"], rect.inflate(-rect.width * 0.4, -rect.height * 0.15))
-        pygame.draw.polygon(surface, COLORS["accent"], [
-            (rect.centerx - rect.width * 0.05, rect.top + rect.height * 0.35),
-            (rect.centerx + rect.width * 0.05, rect.top + rect.height * 0.35),
-            (rect.centerx, rect.bottom - rect.height * 0.13),
-        ])
-    elif icon in ["one", "two", "three"]:
-        number = "1" if icon == "one" else "2" if icon == "two" else "3"
-        draw_text(surface, number, FONT_LARGE, COLORS["accent"], rect.center, align="center")
-    else:
-        pygame.draw.rect(surface, COLORS["accent"], rect.inflate(-rect.width * 0.3, -rect.height * 0.3), border_radius=14)
+    # Dibuixa un rectangle com a pictograma de mostra
+    pygame.draw.rect(surface, COLORS["accent"], rect.inflate(-rect.width * 0.3, -rect.height * 0.3), border_radius=14)
 
 
 def make_question(language_key):
@@ -311,84 +299,259 @@ def start_round():
 def draw_menu(mouse_pos):
     WINDOW.fill(COLORS["background"])
     draw_background(WINDOW)
-    overlay = pygame.Surface((WIDTH - 140, HEIGHT - 100), pygame.SRCALPHA)
-    pygame.draw.rect(overlay, (*COLORS["panel"], 240), (0, 0, overlay.get_width(), overlay.get_height()), border_radius=24)
-    WINDOW.blit(overlay, (70, 50))
 
-    draw_text(WINDOW, "Laboratori Català", FONT_LARGE, COLORS["accent"], (130, 90))
-    draw_text(WINDOW, "Un joc per aprendre amb pictogrames i paraules", FONT_MEDIUM, COLORS["muted"], (130, 160))
+    margin_x = int(WIDTH * 0.08)
+    margin_y = int(HEIGHT * 0.08)
+    overlay_width = WIDTH - margin_x * 2
+    overlay_height = HEIGHT - margin_y - 40
+    overlay = pygame.Surface((overlay_width, overlay_height), pygame.SRCALPHA)
+    pygame.draw.rect(
+        overlay,
+        (*COLORS["panel"], 240),
+        (0, 0, overlay_width, overlay_height),
+        border_radius=24,
+    )
+    WINDOW.blit(overlay, (margin_x, margin_y // 2))
 
-    y = 240
-    draw_text(WINDOW, "Selecciona el teu idioma / اختر لغتك / Elige idioma", FONT_SMALL, COLORS["text"], (130, y))
-    y += 50
+    title_x = margin_x + 20
+    draw_text(WINDOW, "Laboratori Català", FONT_LARGE, COLORS["accent"], (title_x, margin_y))
+    draw_text(
+        WINDOW,
+        "Un joc per aprendre amb pictogrames i paraules",
+        FONT_MEDIUM,
+        COLORS["muted"],
+        (title_x, margin_y + 70),
+    )
+
+    y = margin_y + 150
+    draw_text(WINDOW, "Selecciona el teu idioma / اختر لغتك / Elige idioma", FONT_SMALL, COLORS["text"], (title_x, y))
+    y += int(HEIGHT * 0.08)
 
     BUTTONS.clear()
+    button_width = min(360, overlay_width - 60)
+    button_height = int(HEIGHT * 0.08)
+    button_gap = int(HEIGHT * 0.02)
     for index, lang in enumerate(LANGUAGES):
-        btn_rect = pygame.Rect(130, y + index * 80, 280, 60)
+        btn_rect = pygame.Rect(title_x, y + index * (button_height + button_gap), button_width, button_height)
         label = f"{lang['label']} — {lang['name']}"
         hover = btn_rect.collidepoint(mouse_pos)
-        draw_button(WINDOW, btn_rect, label, hover=hover, color=lang["accent"] if hover else COLORS["panel"])
-        if hover:
-            if pygame.mouse.get_pressed()[0]:
-                pass
+        draw_button(
+            WINDOW,
+            btn_rect,
+            label,
+            hover=hover,
+            color=lang["accent"] if hover else COLORS["panel"],
+        )
         BUTTONS.append((btn_rect, lang["id"]))
 
-    draw_text(WINDOW, "Pensa en on viu el teu estudiant: Marroc, Colòmbia, Itàlia, Xina o Romania.", FONT_SMALL, COLORS["muted"], (130, HEIGHT - 120))
+    draw_text(
+        WINDOW,
+        "Pensa en on viu el teu estudiant: Marroc, Colòmbia, Itàlia, Xina o Romania.",
+        FONT_SMALL,
+        COLORS["muted"],
+        (title_x, HEIGHT - margin_y // 2 - 10),
+    )
+
+
+def draw_intro(mouse_pos):
+    WINDOW.fill(COLORS["background"])
+    draw_background(WINDOW)
+
+    # Animació de fade-in
+    if STATE["intro_fade"] < 1:
+        STATE["intro_fade"] = min(1, STATE["intro_fade"] + 0.03)
+    
+    margin = int(WIDTH * 0.06)
+    overlay_width = WIDTH - margin * 2
+    overlay_height = HEIGHT - margin * 2
+    
+    # Creem una superfície amb transparència per la animació
+    overlay = pygame.Surface((overlay_width, overlay_height), pygame.SRCALPHA)
+    alpha = int(230 * STATE["intro_fade"])
+    pygame.draw.rect(
+        overlay,
+        (*COLORS["panel"], alpha),
+        (0, 0, overlay_width, overlay_height),
+        border_radius=24,
+    )
+    WINDOW.blit(overlay, (margin, margin))
+
+    lang_key = STATE["language"]
+    intro_text = INTRODUCTIONS[lang_key]
+    
+    # Títol amb color de l'idioma
+    lang_data = next(l for l in LANGUAGES if l["id"] == lang_key)
+    accent_color = lang_data["accent"]
+    
+    text_x = margin + 30
+    text_y = margin + 30
+    
+    # Títol decoratiu
+    draw_text(WINDOW, "📚 Benvingut/da 📚", FONT_LARGE, accent_color, (text_x, text_y))
+    
+    # Text de introducció amb wrapping
+    text_y += 80
+    line_height = int(FONT_SMALL.get_linesize() * 1.3)
+    max_width = overlay_width - 60
+    
+    # Divideix el text en línies
+    words = intro_text.split()
+    current_line = ""
+    lines = []
+    
+    for word in words:
+        test_line = current_line + (" " if current_line else "") + word
+        if FONT_SMALL.size(test_line)[0] < max_width:
+            current_line = test_line
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+    
+    # Dibuixa les línies amb fade-in escalonada
+    for idx, line in enumerate(lines):
+        fade_delay = idx * 0.05
+        if STATE["intro_fade"] > fade_delay:
+            line_alpha = min(1, (STATE["intro_fade"] - fade_delay) / 0.3)
+            color_with_alpha = tuple(int(c * line_alpha) for c in COLORS["text"][:3])
+            draw_text(WINDOW, line, FONT_SMALL, color_with_alpha, (text_x, text_y))
+        text_y += line_height
+    
+    # Botó per continuar
+    text_y += 20
+    btn_width = min(300, overlay_width - 60)
+    btn_height = int(HEIGHT * 0.08)
+    btn_rect = pygame.Rect(
+        WIDTH // 2 - btn_width // 2,
+        min(text_y, HEIGHT - margin - btn_height - 20),
+        btn_width,
+        btn_height
+    )
+    
+    hover = btn_rect.collidepoint(mouse_pos)
+    draw_button(WINDOW, btn_rect, "Comença! ▶", hover=hover, color=accent_color if hover else COLORS["button"])
+    
+    BUTTONS.clear()
+    BUTTONS.append((btn_rect, "start_game"))
+
 
 
 def draw_task(mouse_pos):
     WINDOW.fill(COLORS["background"])
     draw_background(WINDOW)
-    overlay = pygame.Surface((WIDTH - 120, HEIGHT - 100), pygame.SRCALPHA)
-    pygame.draw.rect(overlay, (*COLORS["panel"], 230), (0, 0, overlay.get_width(), overlay.get_height()), border_radius=24)
-    WINDOW.blit(overlay, (60, 50))
+
+    margin = int(WIDTH * 0.06)
+    overlay_width = WIDTH - margin * 2
+    overlay_height = HEIGHT - margin * 2
+    overlay = pygame.Surface((overlay_width, overlay_height), pygame.SRCALPHA)
+    pygame.draw.rect(
+        overlay,
+        (*COLORS["panel"], 230),
+        (0, 0, overlay_width, overlay_height),
+        border_radius=24,
+    )
+    WINDOW.blit(overlay, (margin, margin))
 
     lang_key = STATE["language"]
     msg = MESSAGES[lang_key]
-    draw_text(WINDOW, msg["welcome"], FONT_MEDIUM, COLORS["accent"], (90, 80))
-    draw_text(WINDOW, msg["instruction"], FONT_SMALL, COLORS["muted"], (90, 130))
+    text_x = margin + 20
+    draw_text(WINDOW, msg["welcome"], FONT_MEDIUM, COLORS["accent"], (text_x, margin + 20))
+    draw_text(WINDOW, msg["instruction"], FONT_SMALL, COLORS["muted"], (text_x, margin + 80))
 
     question = STATE["question_data"]["question"]
-    card_rect = pygame.Rect(120, 190, 380, 360)
+    card_width = min(int(overlay_width * 0.42), 420)
+    card_height = int(overlay_height * 0.33)
+    card_rect = pygame.Rect(text_x, margin + 120, card_width, card_height)
     pygame.draw.rect(WINDOW, (28, 36, 62), card_rect, border_radius=24)
     pygame.draw.rect(WINDOW, COLORS["muted"], card_rect, width=2, border_radius=24)
     draw_text(WINDOW, question["category"], FONT_SMALL, COLORS["accent"], (card_rect.left + 24, card_rect.top + 20))
-    draw_text(WINDOW, question["catala"], FONT_LARGE, COLORS["text"], (card_rect.centerx, card_rect.top + 130), align="center")
+    draw_text(
+        WINDOW,
+        question["catala"],
+        FONT_LARGE,
+        COLORS["text"],
+        (card_rect.centerx, card_rect.top + 110),
+        align="center",
+    )
 
-    icon_area = pygame.Rect(card_rect.left + 90, card_rect.top + 190, 200, 120)
+    icon_area = pygame.Rect(
+        card_rect.left + 50,
+        card_rect.top + int(card_rect.height * 0.42),
+        card_rect.width - 100,
+        int(card_rect.height * 0.25),
+    )
     draw_pictogram(WINDOW, icon_area, question["icon"])
 
     answers = STATE["question_data"]["options"]
     BUTTONS.clear()
-    for index, answer in enumerate(answers):
-        btn_rect = pygame.Rect(550 + (index % 2) * 420, 220 + (index // 2) * 140, 380, 100)
-        hover = btn_rect.collidepoint(mouse_pos)
-        draw_button(WINDOW, btn_rect, answer, hover=hover)
-        BUTTONS.append((btn_rect, answer))
+    button_height = max(40, int(HEIGHT * 0.075))
+    button_gap = max(8, int(HEIGHT * 0.015))
+    available_width = overlay_width - card_width - 60
+    grid_mode = available_width >= 260
+    if grid_mode:
+        btn_width = min(int(available_width / 2) - 10, 300)
+        for index, answer in enumerate(answers):
+            row = index // 2
+            col = index % 2
+            btn_rect = pygame.Rect(
+                card_rect.right + 30 + col * (btn_width + 20),
+                card_rect.top + row * (button_height + button_gap),
+                btn_width,
+                button_height,
+            )
+            hover = btn_rect.collidepoint(mouse_pos)
+            draw_button(WINDOW, btn_rect, answer, hover=hover)
+            BUTTONS.append((btn_rect, answer))
+    else:
+        btn_width = overlay_width - 40
+        for index, answer in enumerate(answers):
+            btn_rect = pygame.Rect(
+                text_x,
+                card_rect.bottom + 30 + index * (button_height + button_gap),
+                btn_width,
+                button_height,
+            )
+            hover = btn_rect.collidepoint(mouse_pos)
+            draw_button(WINDOW, btn_rect, answer, hover=hover)
+            BUTTONS.append((btn_rect, answer))
 
     if STATE["feedback"]:
         color = COLORS["right"] if STATE["feedback"] == "right" else COLORS["wrong"]
         text = "Correcte!" if STATE["feedback"] == "right" else "Mala resposta"
-        draw_text(WINDOW, text, FONT_MEDIUM, color, (90, HEIGHT - 120))
+        draw_text(WINDOW, text, FONT_MEDIUM, color, (text_x, HEIGHT - margin - 40))
 
     status = f"{msg['score']}: {STATE['score']}    Ronda: {STATE['round']} / 5"
-    draw_text(WINDOW, status, FONT_SMALL, COLORS["muted"], (90, HEIGHT - 190))
+    draw_text(WINDOW, status, FONT_SMALL, COLORS["muted"], (text_x, HEIGHT - margin - 80))
 
 
 def draw_result(mouse_pos):
     WINDOW.fill(COLORS["background"])
     draw_background(WINDOW)
-    overlay = pygame.Surface((WIDTH - 240, HEIGHT - 200), pygame.SRCALPHA)
-    pygame.draw.rect(overlay, (*COLORS["panel"], 245), (0, 0, overlay.get_width(), overlay.get_height()), border_radius=28)
-    WINDOW.blit(overlay, (120, 100))
+
+    margin = int(WIDTH * 0.08)
+    overlay_width = WIDTH - margin * 2
+    overlay_height = HEIGHT - margin * 2
+    overlay = pygame.Surface((overlay_width, overlay_height), pygame.SRCALPHA)
+    pygame.draw.rect(
+        overlay,
+        (*COLORS["panel"], 245),
+        (0, 0, overlay_width, overlay_height),
+        border_radius=28,
+    )
+    WINDOW.blit(overlay, (margin, margin))
 
     lang_key = STATE["language"]
     msg = MESSAGES[lang_key]
-    draw_text(WINDOW, "Final de la ronda", FONT_LARGE, COLORS["accent"], (260, 150))
-    draw_text(WINDOW, f"{msg['score']}: {STATE['score']} / 5", FONT_MEDIUM, COLORS["text"], (260, 240))
-    draw_text(WINDOW, msg["retry"], FONT_SMALL, COLORS["muted"], (260, 320))
+    title_x = margin + 30
+    draw_text(WINDOW, "Final de la ronda", FONT_LARGE, COLORS["accent"], (title_x, margin + 40))
+    draw_text(WINDOW, f"{msg['score']}: {STATE['score']} / 5", FONT_MEDIUM, COLORS["text"], (title_x, margin + 140))
+    draw_text(WINDOW, msg["retry"], FONT_SMALL, COLORS["muted"], (title_x, margin + 200))
 
-    btn_rect = pygame.Rect(620, 330, 320, 90)
+    btn_width = min(320, overlay_width - 80)
+    btn_height = int(HEIGHT * 0.11)
+    btn_rect = pygame.Rect(WIDTH // 2 - btn_width // 2, HEIGHT - margin - btn_height - 20, btn_width, btn_height)
     hover = btn_rect.collidepoint(mouse_pos)
     draw_button(WINDOW, btn_rect, msg["retry"], hover=hover)
     BUTTONS.clear()
@@ -400,10 +563,14 @@ def handle_click(pos):
         if rect.collidepoint(pos):
             if STATE["screen"] == "menu":
                 STATE["language"] = value
-                STATE["screen"] = "task"
-                STATE["score"] = 0
-                STATE["round"] = 0
-                start_round()
+                STATE["screen"] = "intro"
+                STATE["intro_fade"] = 0  # Inicia l'animació
+            elif STATE["screen"] == "intro":
+                if value == "start_game":
+                    STATE["screen"] = "task"
+                    STATE["score"] = 0
+                    STATE["round"] = 0
+                    start_round()
             elif STATE["screen"] == "task":
                 correct = STATE["question_data"]["correct"]
                 if value == correct:
@@ -429,6 +596,8 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.VIDEORESIZE:
+                resize_window(event.w, event.h)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 handle_click(event.pos)
             elif event.type == pygame.USEREVENT + 1:
@@ -438,6 +607,8 @@ def main():
 
         if STATE["screen"] == "menu":
             draw_menu(mouse_pos)
+        elif STATE["screen"] == "intro":
+            draw_intro(mouse_pos)
         elif STATE["screen"] == "task":
             draw_task(mouse_pos)
         elif STATE["screen"] == "result":
